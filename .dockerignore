@@ -1,0 +1,22 @@
+# Dependencies
+node_modules
+**/node_modules
+.pnpm-store
+
+# Env files
+.env
+docker-compose.override.yml
+
+# Build output
+dist
+**/dist
+
+# Test coverage
+coverage
+**/coverage
+
+# Git history
+.git
+
+# Logs
+*.log
