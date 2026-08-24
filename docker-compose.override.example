@@ -1,0 +1,41 @@
+services:
+  shared:
+    image: node:${NODE_VERSION}-alpine
+    working_dir: /app/packages/shared
+    volumes:
+      - .:/app
+    command: >
+      sh -c "corepack enable
+      && corepack prepare pnpm@${PNPM_VERSION} --activate
+      && pnpm install
+      && pnpm dev"
+
+  api:
+    build: !reset null
+    image: node:${NODE_VERSION}-alpine
+    command: sh -c "corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate && pnpm install && pnpm --filter @cookievale/shared build && pnpm dev"
+    working_dir: /app/apps/api
+    environment:
+      - NODE_ENV=development
+      - CONTAINER_MEDIA_PATH=/app_media
+    volumes:
+      - .:/app
+    depends_on:
+      - shared
+
+  web:
+    image: node:${NODE_VERSION}-alpine
+    working_dir: /app/apps/web
+    volumes:
+      - .:/app
+    ports:
+      - "5173:5173"
+    command: >
+      sh -c "corepack enable
+      && corepack prepare pnpm@${PNPM_VERSION} --activate
+      && pnpm install
+      && pnpm --filter @cookievale/shared build
+      && pnpm dev"
+    depends_on:
+      - api
+      - shared
