@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    // Output / compilation
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+
+    // JSX (React 17+ transform, no need to import React in every file)
+    "jsx": "react-jsx",
+
+    // Module interop (CJS/ESM compatibility with third-party packages)
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": false,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    // Module resolution
+    "skipLibCheck": true, // relax: skip type-checking inside third-party .d.ts files
+
+    // Type-checking strictness
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": true // strict addition: catches silently broken method overrides
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}
