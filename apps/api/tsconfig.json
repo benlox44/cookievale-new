@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    // Output / compilation
+    "module": "commonjs",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "declaration": true,
+    "sourceMap": true,
+    "removeComments": true,
+    "incremental": true,
+
+    // Decorators (required by NestJS)
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+
+    // Module interop (CJS/ESM compatibility with third-party packages)
+    "esModuleInterop": true,
+
+    // Module resolution
+    "skipLibCheck": true,
+
+    // Type-checking strictness
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
