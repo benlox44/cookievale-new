@@ -1,21 +1,8 @@
-import { Controller, Get, Module } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
+import { AppModule } from "./app.module";
 import { loadConfig } from "./shared/config/env";
-
-@Controller()
-class AppController {
-  @Get("health")
-  health(): { status: string } {
-    return { status: "ok" };
-  }
-}
-
-@Module({
-  controllers: [AppController],
-})
-class AppModule {}
 
 async function bootstrap(): Promise<void> {
   const config = loadConfig();
