@@ -29,7 +29,7 @@ checklist is complete.
 - [x] `docker-compose.yml` (db postgres:15-alpine + api + web in dev)
 - [x] `docker-compose.override.yml` (gitignored, watch/reload in dev)
 - [x] `Makefile` with: build, up, down, restart, logs, shell, migrate, backup,
-      test, lint, format, format-check, typecheck, check-md
+      test, lint, format, format-check, typecheck
 - [x] The stack starts in Docker and responds on `/health`
 
 ## Phase 2 — Shared (config, security, infra)
@@ -37,17 +37,26 @@ checklist is complete.
 - [x] Fail-fast config (`shared/config/env.ts`: PORT, DATABASE_URL, SECRET_KEY,
       ADMIN_PASSWORD, BASE_URL, TRUSTED_PROXY_HOSTS, CONTAINER_MEDIA_PATH,
       TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, NODE_ENV, TZ)
-- [ ] `packages/shared`: enums `OrderStatus`/`DeliveryMethod` + shared TS DTOs
-- [ ] Drizzle provider (postgres.js) + module wiring in `app.module.ts`
-- [ ] Auth: port of `core/security.py` (HMAC cookie token) as a NestJS guard +
+- [x] `packages/shared`: enums `OrderStatus`/`DeliveryMethod` + shared TS DTOs
+- [x] Drizzle provider (postgres.js) + module wiring in `app.module.ts`
+- [x] Auth: port of `core/security.py` (HMAC cookie token) as a NestJS guard +
       login/logout with cookie (`httponly`, `secure=!dev`, `samesite=lax`, TTL 8h)
-- [ ] Rate limiting (`@nestjs/throttler`) with parity: login `5/hour`,
-      order create `5/hour`; trust proxy from `TRUSTED_PROXY_HOSTS`
+- [x] Swagger self-documentation at `/docs`: `@nestjs/swagger` CLI plugin (DTO
+      auto-schemas via `dtoFileNameSuffix` + `parameterProperties`) + per-controller
+      `@ApiTags`/`@ApiOperation`/`@Api*Response`. **Convention: every new module
+      documents itself as it is created** (not deferred).
+- [x] Rate limiting (`@nestjs/throttler`): global `ThrottlerGuard` (100/h default),
+      login `5/hour` via `@Throttle`, trust proxy from `TRUSTED_PROXY_HOSTS`
+      (`main.ts`). Order create `5/hour` moves with the **orders** module (Phase 4).
 - [ ] Telegram provider (same contract as `core/telegram.py`, HTML, non-fatal)
 - [ ] Media: validation by magic bytes (jpeg/png/gif/webp, ≤10MB), `save_uploads`,
       `update_photo_set` (reconcile/order/cap/cleanup), `delete_media_files`,
       serve `/media`; MAX_ORDER_PHOTOS=8, MAX_PRODUCT_IMAGES=10
-- [ ] Global filters: 401/429/422 as JSON; trust proxy + HTTPS (parity with `main.py`)
+- [x] Global exception filter (`shared/http/domain-exception.filter.ts` as
+      `APP_FILTER`): pure domain exceptions → HTTP (e.g. `InvalidCredentialsException`
+      → 401), `HttpException`s pass through; string-message `HttpException`s are
+      wrapped as `{ statusCode, message }` (429 shape fixed). Remaining: HTTPS
+      (parity with `main.py`)
 
 ## Phase 3 — Drizzle: schema + migrations + ETL
 
@@ -61,35 +70,34 @@ checklist is complete.
       `/media/orders/<id>/` keeps pointing at existing photos and history is kept
       (product_name, amounts, dates, statuses)
 
-## Phase 4 — Backend modules (order: scheduling → products → orders → auth)
+## Phase 4 — Backend modules (order: scheduling → products → orders)
 
-Each module with the EXAMOC structure (Application/Domain/Infrastructure) + tests:
+Each module with the EXAMOC structure (Application/Domain/Infrastructure) + unit
+tests and self-documenting Swagger as it is built (see AGENTS.md conventions):
 
 - [ ] **scheduling**: slots by date, available dates with free counts, purge past
       slots, assign a free slot (with `current_slot_id` for edits), admin add/remove
       slot; public available-dates endpoint
 - [ ] **products**: admin CRUD, active/inactive, multiple images (order + delete),
       `display_order`/reorder, delete guard when orders exist
-- [ ] **orders**: customer create (cart + slot + photos + Telegram + rate limit) and
-      admin create, list (page 50, include delivered, sort by id/date), detail,
-      update (slot re-match for date, past dates → null slot), change status
+- [ ] **orders**: customer create (cart + slot + photos + Telegram + rate limit
+      `5/hour`) and admin create, list (page 50, include delivered, sort by id/date),
+      detail, update (slot re-match for date, past dates → null slot), change status
       (auto-pays on paid/delivered), replace items (price snapshot), delete (frees
       the slot + removes media dir), **no rejected status**
-- [ ] **auth**: login (HMAC, `5/hour`), logout, admin guard
 - [ ] Cart parsing shared (port of `cart.py` `parse_cart_items`, Spanish
       `CartError` messages, `stored_prices` for edits)
 
-## Phase 5 — Backend delivery (tests, Swagger, SPA serve, CI)
+## Phase 5 — Backend delivery (integration tests, SPA serve, CI)
 
-- [ ] Unit tests (vitest): cart, HMAC security, order/product/scheduling service,
-      telegram, uploads/media, health — parity with the legacy unit tests
 - [ ] Integration tests against real postgres (dedicated `<db>_test` database,
       throwaway media dir, drizzle migrate, fake Telegram): admin/auth/client API +
       repositories (slot race / unique index)
 - [ ] NestJS serves the built SPA (`apps/web/dist`) with SPA fallback +
       `/robots.txt` + `/sitemap.xml` (parity)
-- [ ] Swagger verified against the real controllers (`/api/docs`)
-- [ ] CI (GitHub Actions): lint, format-check, typecheck, test, check-md,
+- [ ] Swagger audit: verify `/docs` reflects every real controller (already
+      self-documented per module; Phase 5 only audits completeness)
+- [ ] CI (GitHub Actions): lint, format-check, typecheck, test,
       docker-build
 - [ ] Deploy: `drizzle migrate` on boot/deploy (replaces alembic), adapted
       PowerShell deploy

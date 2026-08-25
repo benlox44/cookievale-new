@@ -1,6 +1,11 @@
-# CookieVale — Order Management System
+<div align="center">
+  <img src="apps/web/public/icons/icon.png" alt="CookieVale" width="200">
+  <br/>
+  <h1>CookieVale — Order Management System</h1>
+  <p>A custom order management system for a boutique bakery.</p>
+</div>
 
-A custom order management system for a boutique bakery. Monorepo with a NestJS API, a Vite + React + TanStack Query SPA, and Drizzle + PostgreSQL.
+Monorepo with a NestJS API, a Vite + React + TanStack Query SPA, and Drizzle + PostgreSQL.
 
 ## Quick Start
 
@@ -45,23 +50,7 @@ A custom order management system for a boutique bakery. Monorepo with a NestJS A
 
 ## Development Commands
 
-We rely on a `Makefile` to encapsulate Docker operations. Run `make` or `make help` to list every available target (the help output is the source of truth).
-
-| Command | Description |
-| --- | --- |
-| `make build` | Rebuild Docker images. Only needed when the `Dockerfile`, `package.json`, or system dependencies change. |
-| `make up` | Spin up the entire stack in the background |
-| `make down` | Tear down the stack |
-| `make restart` | Restart the API container |
-| `make logs` | Tail the API container logs |
-| `make shell` | Open a bash session inside the API container |
-| `make migrate` | Apply all pending Drizzle migrations |
-| `make backup` | Run the backup script in a throwaway container that mounts `BACKUP_DEST` only for the backup. The app container never mounts it. Fails with a clear message if unavailable. |
-| `make test` | Run vitest (unit + integration) across the monorepo |
-| `make lint` / `make lint-check` | Lint with auto-fix / read-only gate for CI |
-| `make format` / `make format-check` | Format (write) / check formatting (read-only) |
-| `make typecheck` | Strict type-check across the monorepo |
-| `make check-md` | Lint all Markdown files |
+Every operation is a `make` target. Run `make help` (or plain `make`) to list them all — the help output is the source of truth.
 
 ## Stack
 
@@ -97,14 +86,15 @@ The backend is built upon **vertical slices**: each business context (e.g. `orde
 
 Server state never lives in local component state: TanStack Query mutations invalidate and refetch the cache.
 
+### Accepted architectural exceptions
+
+Two deviations from the dependency rule are deliberate and documented:
+
+- **`@nestjs/common` in the application layer** — use cases are marked `@Injectable()` so NestJS DI can inject their dependencies. Use cases still depend on domain *interfaces* (ports) and never on infrastructure implementations; the decorator is the one framework dependency NestJS requires.
+- **Shared security primitives used by the application layer** — use cases import `safeCompare` from `shared/security` directly for constant-time comparisons. `shared/` is the shared kernel, so this is within the letter of the architecture; wrapping it behind an injected service would add ceremony without benefit.
+
 ## Routes
 
-The backend exposes a JSON API. All routes are documented automatically by NestJS in the interactive OpenAPI/Swagger UI at **`/api/docs`** (available when not running in production). The source of truth lives in the controllers under `apps/api/src/modules/*/infrastructure/controllers/`.
+All backend routes are documented automatically by NestJS in the interactive OpenAPI/Swagger UI at **`/docs`** (available when not running in production). The source of truth lives in the controllers under `apps/api/src/modules/*/infrastructure/controllers/`.
 
-- `GET /health` — health check used by the stack
-- **scheduling** — availability slots, available dates, capacity
-- **products** — admin CRUD, active/inactive, images
-- **orders** — customer form (cart, slot, photos, Telegram on create), admin CRUD, editing, deletion (frees the slot; there is no rejected status)
-- **auth** — admin login (HMAC cookie session), panel, logout, login rate limit
-
-The SPA is served by the API: `/` and `/orders/new` for customers, plus the admin panel. Photos are served from `/media/orders/<id>/`, preserving the legacy directory structure.
+The SPA is served by the API at `/` and `/orders/new` for customers, plus the admin panel. Photos are served from `/media/orders/<id>/`, preserving the legacy directory structure.
