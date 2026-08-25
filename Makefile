@@ -1,4 +1,4 @@
-.PHONY: help build up down restart logs migrate backup test lint lint-check format format-check typecheck check-md
+.PHONY: help build up down restart logs migrate backup test lint lint-check format format-check typecheck
 
 .DEFAULT_GOAL := help
 
@@ -68,7 +68,3 @@ format-check:
 ## typecheck: Type-check across the monorepo
 typecheck:
 	$(DC) exec $(APP) pnpm -r run typecheck
-
-## check-md: Lint Markdown files
-check-md:
-	docker run --rm -v "$${PWD}:/work" -w /work node:${NODE_VERSION}-alpine npx markdownlint-cli2 "**/*.md"
