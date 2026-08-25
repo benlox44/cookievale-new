@@ -1,3 +1,4 @@
+import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
@@ -8,6 +9,15 @@ async function bootstrap(): Promise<void> {
   const config = loadConfig();
   const app = await NestFactory.create(AppModule);
 
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  if (config.trustedProxyHosts.length > 0) {
+    const server = app.getHttpAdapter().getInstance() as {
+      set(key: string, value: string[]): void;
+    };
+    server.set("trust proxy", config.trustedProxyHosts);
+  }
+
   if (config.nodeEnv !== "production") {
     const swaggerConfig = new DocumentBuilder()
       .setTitle("CookieVale API")
@@ -15,7 +25,7 @@ async function bootstrap(): Promise<void> {
       .setVersion("1.0")
       .build();
     const document = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup("api/docs", app, document);
+    SwaggerModule.setup("docs", app, document);
   }
 
   app.enableShutdownHooks();
