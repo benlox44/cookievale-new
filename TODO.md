@@ -1,107 +1,101 @@
-# CookieVale — Migration to NestJS + React (TODO)
+# CookieVale — Migration to NestJS (TODO)
 
 Migration project from **cookievale** (FastAPI + HTMX + Alpine.js, Python) to a new
-stack: **NestJS** (backend, EXAMOC/Clean Architecture style) + **Vite + React +
-TypeScript + TanStack Query** (frontend) + **Drizzle** (ORM) + PostgreSQL.
+stack: **NestJS** (backend, EXAMOC/Clean Architecture style) + **Drizzle** (ORM) +
+PostgreSQL. The frontend (Vite + React + TanStack Query) is deliberately **out of
+scope** for now: first the backend reaches full parity with the legacy app, and only
+then is the frontend planned.
 
 The old project stays **frozen** (no new features) in `~/dev/cookievale` until this
 checklist is complete.
 
-## Working agreement
+## Phase 0 — Repo bootstrap [DONE]
 
-This project is **learning first, product second**. The goal is that I write all the
-code (Dockerfile, docker-compose, Makefile, backend, frontend, tests, CI) and the agent
-**reviews and grades it**, explaining what is good, what is not, and why. There is no
-rush: it is my partner's small business, I will be on this project forever and can take
-as long as needed. Go step by step, in several parts.
-
-- [ ] Golden rule: **I write, the agent reviews/grades**. The agent does not implement
-      for me unless I explicitly ask.
-- [ ] Every new piece I write → the agent reviews it with criteria (correctness,
-      conventions, security, testing) and gives me a grade + explanation.
-
-## Phase 0 — Repo bootstrap
-
-- [ ] `git init` in `~/dev/cookievale-new` (repo from scratch, without the old branch)
-- [ ] New GitHub repo for cookievale-new (the old one will be archived at cutover)
-- [ ] `versions.env` with NODE_VERSION / POSTGRES_VERSION / BUN_VERSION (if applicable)
+- [x] `git init` in `~/dev/cookievale-new` (repo from scratch, without the old branch)
+- [x] New GitHub repo for cookievale-new (the old one will be archived at cutover)
+- [x] `versions.env` with NODE_VERSION / POSTGRES_VERSION / BUN_VERSION (if applicable)
       as the single source of truth
-- [ ] `.env.example` fail-fast (all values, no defaults)
-- [ ] `.gitattributes` (LF: versions.env, .env.example, Makefile, Dockerfile,
+- [x] `.env.example` fail-fast (all values, no defaults)
+- [x] `.gitattributes` (LF: versions.env, .env.example, Makefile, Dockerfile,
       docker-compose.yml)
-- [ ] `.gitignore` (node_modules, .env, dist, coverage, etc.)
-- [ ] `.pre-commit-config.yaml` (file hygiene: end-of-file, trailing whitespace, LF)
-- [ ] pnpm workspace: root `package.json` + `pnpm-workspace.yaml`
+- [x] `.gitignore` (node_modules, .env, dist, coverage, etc.)
+- [x] `.pre-commit-config.yaml` (file hygiene: end-of-file, trailing whitespace, LF)
+- [x] pnpm workspace: root `package.json` + `pnpm-workspace.yaml`
       (apps/api, apps/web, packages/shared)
 
-## Phase 1 — Docker + Make (I write it, they grade it)
+## Phase 1 — Docker + Make [DONE]
 
-- [ ] Multi-stage `Dockerfile` (build web + api; NestJS serves the static SPA)
-- [ ] `docker-compose.yml` (db postgres:15-alpine + api + web in dev)
-- [ ] `docker-compose.override.yml` (gitignored, watch/reload in dev)
-- [ ] `Makefile` with: build, up, down, restart, logs, shell, migrate, backup,
+- [x] Multi-stage `Dockerfile` (build web + api; NestJS serves the static SPA)
+- [x] `docker-compose.yml` (db postgres:15-alpine + api + web in dev)
+- [x] `docker-compose.override.yml` (gitignored, watch/reload in dev)
+- [x] `Makefile` with: build, up, down, restart, logs, shell, migrate, backup,
       test, lint, format, format-check, typecheck, check-md
-- [ ] The stack starts in Docker and responds on `/health`
+- [x] The stack starts in Docker and responds on `/health`
 
 ## Phase 2 — Shared (config, security, infra)
 
-- [ ] Fail-fast config (read `process.env` without defaults)
-- [ ] Auth: exact port of the HMAC cookie session (NestJS guard + cookie)
-- [ ] Rate limiting (`@nestjs/throttler`) with parity to the current app
-- [ ] Telegram notifier as a provider (same contract as `telegram.py`)
-- [ ] Media uploads + serve `/media` (preserve `/media/orders/<id>/` structure)
-- [ ] Packages/shared: enums (OrderStatus, DeliveryMethod) and shared TS DTOs
+- [x] Fail-fast config (`shared/config/env.ts`: PORT, DATABASE_URL, SECRET_KEY,
+      ADMIN_PASSWORD, BASE_URL, TRUSTED_PROXY_HOSTS, CONTAINER_MEDIA_PATH,
+      TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, NODE_ENV, TZ)
+- [ ] `packages/shared`: enums `OrderStatus`/`DeliveryMethod` + shared TS DTOs
+- [ ] Drizzle provider (postgres.js) + module wiring in `app.module.ts`
+- [ ] Auth: port of `core/security.py` (HMAC cookie token) as a NestJS guard +
+      login/logout with cookie (`httponly`, `secure=!dev`, `samesite=lax`, TTL 8h)
+- [ ] Rate limiting (`@nestjs/throttler`) with parity: login `5/hour`,
+      order create `5/hour`; trust proxy from `TRUSTED_PROXY_HOSTS`
+- [ ] Telegram provider (same contract as `core/telegram.py`, HTML, non-fatal)
+- [ ] Media: validation by magic bytes (jpeg/png/gif/webp, ≤10MB), `save_uploads`,
+      `update_photo_set` (reconcile/order/cap/cleanup), `delete_media_files`,
+      serve `/media`; MAX_ORDER_PHOTOS=8, MAX_PRODUCT_IMAGES=10
+- [ ] Global filters: 401/429/422 as JSON; trust proxy + HTTPS (parity with `main.py`)
 
-## Phase 3 — Drizzle: new schema + migrations
+## Phase 3 — Drizzle: schema + migrations + ETL
 
-- [ ] `drizzle/schema.ts` with the 4 tables: orders, order_items, products,
-      availability_slots (+ enums)
-- [ ] Generate baseline migration and a working `make migrate`
-- [ ] Schema decisions made consciously (do not blindly copy the old one)
-- [ ] ETL script (old DB → new DB) that **preserves the IDs** so
+- [ ] `drizzle/schema.ts`: availability_slots, products, orders, order_items +
+      pgEnum `OrderStatus`/`DeliveryMethod`
+- [ ] Conscious schema decisions (do not blindly copy the old one): `image_urls`/
+      `reference_photos` as `text[]`, `product_name` snapshot, timestamps,
+      `uq_orders_availability_slot_active`
+- [ ] Generate baseline migration + working `make migrate`
+- [ ] ETL script (old DB → new DB) that **preserves the primary keys** so
       `/media/orders/<id>/` keeps pointing at existing photos and history is kept
-      (product_name, amounts, dates)
+      (product_name, amounts, dates, statuses)
 
 ## Phase 4 — Backend modules (order: scheduling → products → orders → auth)
 
 Each module with the EXAMOC structure (Application/Domain/Infrastructure) + tests:
 
-- [ ] **scheduling**: availability slots, available dates, capacity
-- [ ] **products**: admin CRUD, active/inactive, images
-- [ ] **orders**: customer form (cart, slot, photos, Telegram on create),
-      admin CRUD, editing, deletion (frees the slot), no rejected status
-- [ ] **auth**: admin login (HMAC), panel, logout, login rate limit
+- [ ] **scheduling**: slots by date, available dates with free counts, purge past
+      slots, assign a free slot (with `current_slot_id` for edits), admin add/remove
+      slot; public available-dates endpoint
+- [ ] **products**: admin CRUD, active/inactive, multiple images (order + delete),
+      `display_order`/reorder, delete guard when orders exist
+- [ ] **orders**: customer create (cart + slot + photos + Telegram + rate limit) and
+      admin create, list (page 50, include delivered, sort by id/date), detail,
+      update (slot re-match for date, past dates → null slot), change status
+      (auto-pays on paid/delivered), replace items (price snapshot), delete (frees
+      the slot + removes media dir), **no rejected status**
+- [ ] **auth**: login (HMAC, `5/hour`), logout, admin guard
+- [ ] Cart parsing shared (port of `cart.py` `parse_cart_items`, Spanish
+      `CartError` messages, `stored_prices` for edits)
 
-## Phase 5 — Frontend (Vite + React + TS + TanStack Query)
+## Phase 5 — Backend delivery (tests, Swagger, SPA serve, CI)
 
-- [ ] Admin login + protected routing
-- [ ] Admin dashboards (orders, products, dates) with TanStack Query
-      (mutations → invalidate → refetch)
-- [ ] **Customer form** (business priority): catalog, cart, date/capacity selection,
-      photos, confirmation
-- [ ] UI in Spanish, port of the current look & feel (Tailwind v4)
-- [ ] SEO: `/`, `/orders/new`, sitemap.xml, robots.txt
+- [ ] Unit tests (vitest): cart, HMAC security, order/product/scheduling service,
+      telegram, uploads/media, health — parity with the legacy unit tests
+- [ ] Integration tests against real postgres (dedicated `<db>_test` database,
+      throwaway media dir, drizzle migrate, fake Telegram): admin/auth/client API +
+      repositories (slot race / unique index)
+- [ ] NestJS serves the built SPA (`apps/web/dist`) with SPA fallback +
+      `/robots.txt` + `/sitemap.xml` (parity)
+- [ ] Swagger verified against the real controllers (`/api/docs`)
+- [ ] CI (GitHub Actions): lint, format-check, typecheck, test, check-md,
+      docker-build
+- [ ] Deploy: `drizzle migrate` on boot/deploy (replaces alembic), adapted
+      PowerShell deploy
 
-## Phase 6 — Tests + CI
+## Deferred — Frontend (out of scope until backend parity)
 
-- [ ] Test parity with the current 13 files (unit + integration against real
-      postgres, vitest)
-- [ ] CI (GitHub Actions): lint, format, typecheck, test, check-md, pre-commit,
-      docker-build (same job pattern as the old repo)
-- [ ] Adapted PowerShell deploy (drizzle migrate instead of alembic)
-
-## Phase 7 — Cutover (when to really migrate)
-
-Migration gate: **everything below green** before shutting down the old app.
-
-- [ ] Customer form complete and tested (cart, slots, photos, Telegram)
-- [ ] Admin complete (login, CRUD orders/products/dates, photo upload)
-- [ ] Rate limit and session security with parity
-- [ ] `/`, `/orders/new`, sitemap.xml, robots.txt
-- [ ] Backup + media working against the new infra
-- [ ] Test parity + green CI in cookievale-new
-- [ ] ETL executed: data verified (row counts, amounts, history,
-      photos reachable via `/media/orders/<id>/`)
-- [ ] New deploy on the VPS + healthcheck ok
-- [ ] **Switch**: shut down old cookievale, archive `benlox44/cookievale` on GitHub
-- [ ] Document operations (backup, deploy, migrate) in the new README
+The customer form, admin dashboards and the rest of the UI (Vite + React + TanStack
+Query) plus the cutover checklist are planned **only after the backend reaches full
+parity**. This section will be expanded into its own phases at that point.
