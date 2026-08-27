@@ -1,7 +1,7 @@
 # CookieVale — Agent Guide (NestJS + React)
 
-NestJS + Vite + React + TypeScript + TanStack Query + TailwindCSS + PostgreSQL + Drizzle bakery order management system.
-Everything runs inside Docker.
+Bakery order management system. Everything runs inside Docker. The [README](README.md)
+covers the stack and architecture; this guide is the agent-specific detail on top.
 
 ## Commands
 
@@ -11,66 +11,26 @@ Everything runs inside Docker.
 - `make logs` — tail container logs
 - `make shell` — bash into the api container
 - `make migrate` — apply Drizzle migrations (inside container)
-- `make backup` — run the backup script in a throwaway container that mounts `$BACKUP_DEST` at `/app_backup` only for the duration of the backup (requires the stack to be up). Exports the database and syncs media files. The app container never mounts the backup destination; fails with a clear message when it is unavailable.
-- `make test` — run vitest (unit + integration)
+- `make backup` — DB + media backup in a throwaway container (needs `$BACKUP_DEST`; stack up). Details under Quirks.
+- `make test` — run vitest across the monorepo (unit + integration)
+- Single test: `make shell`, then `pnpm --filter @cookievale/api exec vitest run <path>` (one file) or `... vitest run -t "<name>"` (by test name)
 - `make lint` / `make lint-check` / `make format` / `make format-check` / `make typecheck` — same semantics as the legacy repo (`lint` and `format` auto-fix; `lint-check` and `format-check` are read-only gates for CI)
 - There is no `make check`: the Makefile exposes single-action primitives and CI composes them into jobs (Google-style presubmit). Run the relevant targets before pushing; CI is the authoritative gate.
 
-## Architecture — Monorepo
+## Architecture
 
-npm/pnpm workspace with three packages:
+The monorepo packages and the vertical-slice module layout are in the
+[README](README.md#architecture). Agent-specific rules on top:
 
-| Package | Role |
-| --- | --- |
-| `apps/api` | NestJS backend (clean architecture, EXAMOC-style vertical slicing) |
-| `apps/web` | Vite + React + TypeScript + TanStack Query SPA |
-| `packages/shared` | Enums + TS DTOs shared between api and web |
-
-Modules live in `apps/api/src/modules/<context>/`. Each module is a bounded
-context with a fixed internal layout (DDD + Clean Architecture):
-
-| Path | Role |
-| --- | --- |
-| `application/dto/` | Request/Response DTOs, suffix `.dto.ts`, class-validator where needed |
-| `application/use-cases/` | Application services: one class per operation (e.g. `CreateOrderUseCase`). Orchestrate domain + repositories, return DTOs. |
-| `domain/entities/` | Pure domain entities (no infra imports, no Drizzle decorators) |
-| `domain/value-objects/` | Value objects |
-| `domain/constants/` | Domain constants (e.g. session TTL, media caps) |
-| `domain/services/` | Domain services: stateless domain logic that belongs to no single entity |
-| `domain/repositories/` | Repository **interfaces** + criteria types |
-| `domain/exceptions/` | Pure domain exceptions (extend `Error`, no HTTP knowledge) |
-| `infrastructure/controllers/` | NestJS controllers. Return DTOs, delegate to use cases. |
-| `infrastructure/repositories/` | Drizzle implementations of the repository interfaces |
-| `infrastructure/services/` | Technical services (token, telegram, media) |
-| `infrastructure/guards/` | NestJS guards (auth, roles) |
-| `infrastructure/filters/` | Scoped exception filters |
-| `<context>.module.ts` | NestJS module wiring it all together |
-
-### Dependency rule
-
-Dependencies point **inward**: `infrastructure → application → domain`.
-
-- `domain` has zero framework/infra imports (no `@nestjs/*`, no Drizzle).
-- `application` depends on domain interfaces, never on infrastructure implementations (Dependency Inversion).
-- `infrastructure` implements the domain interfaces and is wired by NestJS DI.
-- Domain exceptions are thrown from use cases/domain; a global `APP_FILTER` in
-  `shared/http/` maps them to HTTP status codes. Infra at the boundary (guards,
-  controllers) may throw HTTP exceptions directly.
-
-Shared infra in `apps/api/src/shared/`: config, drizzle, security, rate-limit,
-telegram, media, http (global filters). Global filters live in `shared/http/`.
-
-`shared/` is a **Shared Kernel**, not a bounded context: it is organized by
-technical concern (`config/`, `drizzle/`, `http/`, `security/`), NOT by DDD
-layers — it holds cross-cutting infra shared between contexts.
-
-New modules must be registered in `app.module.ts`.
+- **Dependency rule** — dependencies point inward: `infrastructure → application → domain`. `domain` has zero framework/infra imports (no `@nestjs/*`, no Drizzle); `application` depends on domain interfaces, never on infrastructure implementations; `infrastructure` implements them and is wired by NestJS DI. Domain exceptions are thrown from use cases/domain and a global `APP_FILTER` in `shared/http/` maps them to HTTP; boundary infra (guards, controllers) may throw `HttpException` directly.
+- **Shared Kernel** — `apps/api/src/shared/` (config, drizzle, security, rate-limit, telegram, media, http) is organized by technical concern, NOT by DDD layers — cross-cutting infra shared between contexts.
+- Register every new module in `app.module.ts`.
 
 ## Migrations (Drizzle)
 
-- Schema in `apps/api/drizzle/`.
-- Generate: `drizzle-kit generate` (inside container), apply with `make migrate`.
-- **Data migration**: a dedicated ETL script moves old-DB data into the new schema, **preserving primary keys** so `/media/orders/<id>/` keeps pointing at existing photos.
+- Schema in `apps/api/src/shared/drizzle/schema/` (per-table modules + a barrel `index.ts` exporting the `schema` object for the drizzle client). Migrations in `apps/api/drizzle/migrations/`; config in `apps/api/drizzle.config.ts`. Schema lives under `src/` so `nest build`/`tsc` cover it.
+- `make generate` after editing the schema (writes the next `NNNN_*.sql`); `make migrate` applies pending migrations to `DATABASE_URL`. Build `@cookievale/shared` first — the pgEnums derive from its `*_VALUES` and are stored lowercase.
+- **Cutover** (one-time, at go-live): legacy data is loaded in place by a throwaway, gitignored `cutover*.sql` — park the old tables into a `legacy` schema, `make migrate`, `INSERT … SELECT` preserving primary keys, then drop `legacy`. Steps in `TODO.md`.
 
 ## Conventions
 
@@ -78,7 +38,6 @@ New modules must be registered in `app.module.ts`.
 - **Typing**: Strict TypeScript mandatory everywhere. No `any` escapes. When fixing typecheck errors, never relax the config strictness — fix the code, not the rules.
 - **Env vars**: fail-fast (`process.env["KEY"]` — crash if missing), never `process.env.KEY ?? "default"`.
 - **Versions**: `versions.env` is the single source of truth for Node/PostgreSQL/Tailwind/package-manager versions. Never hardcode a version anywhere else (workflows, Dockerfile, docker-compose, configs).
-- **Comments**: Explain WHY, not WHAT. Only comment complex business logic or edge cases.
 - **TanStack Query**: mutations → invalidate cache → refetch. Server state never lives in local component state.
 - **Domain layer**: pure entities and value objects. No framework/infra dependencies.
 - **DTOs**: suffix `.dto.ts` (`login.dto.ts`, `login-response.dto.ts`), class PascalCase. Response DTOs are classes (not interfaces) so the Swagger CLI plugin can read them at runtime.
@@ -88,6 +47,12 @@ New modules must be registered in `app.module.ts`.
 - **CQRS**: out of scope for this project — use cases already give per-operation separation; do not introduce `@nestjs/cqrs` unless the domain demands it.
 - **Application vs domain services**: application services (use cases) orchestrate and return DTOs; domain services hold stateless domain logic that belongs to no single entity; technical services (token, telegram, media) live in `infrastructure/services/`.
 - **Line endings**: LF everywhere.
+
+## Comments
+
+Comments explain **WHY**, never WHAT — the code already shows what it does. Write
+them only for non-obvious rationale, edge cases or gotchas; if a comment restates
+the code, delete it. Always use `/** … */` (JSDoc), never `//`, and keep them short.
 
 ## Quirks
 

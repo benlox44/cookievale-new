@@ -52,6 +52,14 @@ Monorepo with a NestJS API, a Vite + React + TanStack Query SPA, and Drizzle + P
 
 Every operation is a `make` target. Run `make help` (or plain `make`) to list them all — the help output is the source of truth.
 
+## Working with AI agents
+
+Agent guidance lives in a single file, [`AGENTS.md`](AGENTS.md) — build/test commands, architecture and conventions. Claude Code instead looks for `CLAUDE.md`. If you use Claude Code, create it locally as a symlink to `AGENTS.md`:
+
+```bash
+ln -s AGENTS.md CLAUDE.md
+```
+
 ## Stack
 
 - **Backend:** NestJS (strict TypeScript, clean architecture)

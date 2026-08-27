@@ -48,8 +48,8 @@ checklist is complete.
 - [x] Rate limiting (`@nestjs/throttler`): global `ThrottlerGuard` (100/h default),
       login `5/hour` via `@Throttle`, trust proxy from `TRUSTED_PROXY_HOSTS`
       (`main.ts`). Order create `5/hour` moves with the **orders** module (Phase 4).
-- [ ] Telegram provider (same contract as `core/telegram.py`, HTML, non-fatal)
-- [ ] Media: validation by magic bytes (jpeg/png/gif/webp, ≤10MB), `save_uploads`,
+- [x] Telegram provider (same contract as `core/telegram.py`, HTML, non-fatal)
+- [x] Media: validation by magic bytes (jpeg/png/gif/webp, ≤10MB), `save_uploads`,
       `update_photo_set` (reconcile/order/cap/cleanup), `delete_media_files`,
       serve `/media`; MAX_ORDER_PHOTOS=8, MAX_PRODUCT_IMAGES=10
 - [x] Global exception filter (`shared/http/domain-exception.filter.ts` as
@@ -58,17 +58,31 @@ checklist is complete.
       wrapped as `{ statusCode, message }` (429 shape fixed). Remaining: HTTPS
       (parity with `main.py`)
 
-## Phase 3 — Drizzle: schema + migrations + ETL
+## Phase 3 — Drizzle: schema + migrations + cutover
 
-- [ ] `drizzle/schema.ts`: availability_slots, products, orders, order_items +
-      pgEnum `OrderStatus`/`DeliveryMethod`
-- [ ] Conscious schema decisions (do not blindly copy the old one): `image_urls`/
-      `reference_photos` as `text[]`, `product_name` snapshot, timestamps,
-      `uq_orders_availability_slot_active`
-- [ ] Generate baseline migration + working `make migrate`
-- [ ] ETL script (old DB → new DB) that **preserves the primary keys** so
-      `/media/orders/<id>/` keeps pointing at existing photos and history is kept
-      (product_name, amounts, dates, statuses)
+- [x] Schema in `src/shared/drizzle/schema/` (per-table modules + barrel;
+      generated migrations in `drizzle/migrations/`): availability_slots,
+      products, orders, order_items + pgEnum `order_status`/`delivery_method`
+- [x] Conscious schema decisions (do not blindly copy the old one): `image_urls`/
+      `reference_photos` as `text[]` NOT NULL default `'{}'`, `product_name`
+      snapshot NOT NULL, timestamps, `uq_orders_availability_slot_active`;
+      **enums lowercase** (shared package is source of truth — legacy stored
+      UPPERCASE); **DB-level server defaults** (legacy had ORM-only); FK
+      `ON DELETE`: order_items→orders `CASCADE`, order_items→products nullable
+      `SET NULL`, orders→availability_slots `SET NULL`
+- [x] Create `drizzle.config.ts`, wire `{ schema }` into `DrizzleService`
+      (typed `db.query.*`), generate baseline migration, verify `make migrate`
+      applies cleanly on an **empty** DB (reproducible baseline)
+- [ ] Cutover (one-time, in place — at go-live, not now): reshape the legacy prod
+      DB in the **same** database via a throwaway `cutover*.sql`
+      (**gitignored, never committed**). Runbook **park → migrate → load → drop**:
+      (1) move the 4 tables + 2 enums into a `legacy` schema so `public` is empty;
+      (2) `make migrate` builds the new schema and stamps its own journal;
+      (3) `INSERT … SELECT` from `legacy.*` **preserving primary keys** (so
+      `/media/orders/<id>/` stays valid), lowercasing enums, coalescing null
+      arrays to `'{}'`, backfilling `product_name`, then resync sequences;
+      (4) `DROP SCHEMA legacy CASCADE`. No ETL code or `LEGACY_DATABASE_URL` in
+      the repo — only this runbook.
 
 ## Phase 4 — Backend modules (order: scheduling → products → orders)
 
