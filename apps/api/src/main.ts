@@ -1,5 +1,6 @@
 import { ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
+import { type NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 
 import { AppModule } from "./app.module";
@@ -7,9 +8,12 @@ import { loadConfig } from "./shared/config/env";
 
 async function bootstrap(): Promise<void> {
   const config = loadConfig();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
+  /** Serve uploaded photos from the host media volume. */
+  app.useStaticAssets(config.containerMediaPath, { prefix: "/media" });
 
   if (config.trustedProxyHosts.length > 0) {
     const server = app.getHttpAdapter().getInstance() as {

@@ -6,6 +6,7 @@ import { AppController } from "./app.controller";
 import { AuthModule } from "./modules/auth/auth.module";
 import { DrizzleModule } from "./shared/drizzle/drizzle.module";
 import { DomainExceptionFilter } from "./shared/http/domain-exception.filter";
+import { MediaModule } from "./shared/media/media.module";
 import { TelegramModule } from "./shared/telegram/telegram.module";
 
 @Module({
@@ -22,6 +23,7 @@ import { TelegramModule } from "./shared/telegram/telegram.module";
     }),
     DrizzleModule,
     TelegramModule,
+    MediaModule,
     AuthModule,
   ],
   controllers: [AppController],
