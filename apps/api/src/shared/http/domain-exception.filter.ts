@@ -15,7 +15,7 @@ import { DomainException } from "../exceptions/domain-exception";
 const UNKNOWN_STATUS = HttpStatus.INTERNAL_SERVER_ERROR;
 const SERVER_ERROR_THRESHOLD = 500;
 
-// Maps domain error codes to HTTP statuses. Register every new domain exception code here.
+/** Register every new domain exception code here to map it to an HTTP status. */
 const DOMAIN_STATUS_BY_CODE: Record<string, number> = {
   "AUTH.INVALID_CREDENTIALS": HttpStatus.UNAUTHORIZED,
 };

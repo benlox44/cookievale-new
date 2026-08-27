@@ -105,7 +105,6 @@ async function main() {
 
   log(`[*] Destination: ${backupDir}`);
 
-  // ---- Database dump (compressed) ----
   log("[*] Exporting database...");
   const dumpPath = join(configDir, "cookievale_db_dump.sql.gz");
   try {
@@ -126,7 +125,6 @@ async function main() {
     process.exit(1);
   }
 
-  // ---- Verify dump ----
   if (statSync(dumpPath).size === 0) {
     log("[ERROR] Database dump is empty (0 bytes)");
     rmSync(backupDir, { recursive: true, force: true });
@@ -141,12 +139,10 @@ async function main() {
   }
   log("[OK] Dump integrity verified");
 
-  // ---- Copy .env (LF only) ----
   log("[*] Copying .env...");
   const envSrc = join(__dirname, ".env");
   writeFileSync(join(configDir, ".env"), readFileSync(envSrc, "utf8").replace(/\r\n/g, "\n"));
 
-  // ---- Media sync ----
   if (!existsSync(mediaRoot)) {
     log(`[WARNING] CONTAINER_MEDIA_PATH (${mediaRoot}) does not exist, skipping`);
   } else {
@@ -156,7 +152,6 @@ async function main() {
     log(`[OK] Media synced: ${formatSize(dirSize(mediaDir))}`);
   }
 
-  // ---- Rotate old backups ----
   log(`[*] Cleaning old backups (keeping last ${BACKUP_RETENTION})...`);
   const backupDirs = readdirSync(dest, { withFileTypes: true })
     .filter((e) => e.isDirectory() && TIMESTAMP_RE.test(e.name))
@@ -167,7 +162,6 @@ async function main() {
     rmSync(oldDir, { recursive: true, force: true });
   }
 
-  // ---- Summary ----
   const totalSize = formatSize(dirSize(backupDir));
   const remaining = Math.min(backupDirs.length, BACKUP_RETENTION);
   log(`=== Backup Completed Successfully === (${totalSize}, ${remaining}/${BACKUP_RETENTION} backups stored)`);
