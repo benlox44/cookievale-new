@@ -8,8 +8,10 @@ export default tseslint.config(
     ignores: [
       "**/dist/**",
       "**/coverage/**",
+      "**/drizzle/migrations/**",
       "eslint.config.mjs",
       "vitest.config.mjs",
+      "drizzle.config.ts",
     ],
   },
   eslint.configs.recommended,

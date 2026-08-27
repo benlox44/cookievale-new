@@ -1,4 +1,4 @@
-.PHONY: help build up down restart logs migrate backup test lint lint-check format format-check typecheck
+.PHONY: help build up down restart logs generate migrate backup test lint lint-check format format-check typecheck
 
 .DEFAULT_GOAL := help
 
@@ -31,6 +31,10 @@ restart:
 ## logs: Tail api container logs
 logs:
 	$(DC) logs -f $(APP)
+
+## generate: Generate a Drizzle migration from the schema
+generate:
+	$(DC) exec $(APP) npx drizzle-kit generate
 
 ## migrate: Apply Drizzle migrations
 migrate:
