@@ -2,7 +2,10 @@ import { Inject, Injectable } from "@nestjs/common";
 
 import { safeCompare } from "../../../../shared/security/safe-compare";
 import { InvalidCredentialsException } from "../../domain/exceptions/invalid-credentials.exception";
-import { AUTH_CONFIG, type AuthConfig } from "../../domain/services/auth-config";
+import {
+  AUTH_CONFIG,
+  type AuthConfig,
+} from "../../domain/services/auth-config";
 import {
   SESSION_TOKEN_SERVICE,
   type SessionTokenService,

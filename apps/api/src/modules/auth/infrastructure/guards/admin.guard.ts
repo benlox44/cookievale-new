@@ -8,7 +8,10 @@ import {
 import type { Request } from "express";
 
 import { SESSION_COOKIE_NAME } from "../../domain/constants/session.constants";
-import { AUTH_CONFIG, type AuthConfig } from "../../domain/services/auth-config";
+import {
+  AUTH_CONFIG,
+  type AuthConfig,
+} from "../../domain/services/auth-config";
 import {
   SESSION_TOKEN_SERVICE,
   type SessionTokenService,

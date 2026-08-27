@@ -20,10 +20,10 @@ describe("AdminGuard", () => {
   let verifyToken: ReturnType<typeof vi.fn>;
 
   function createGuard(secretKey = "test-secret"): AdminGuard {
-    return new AdminGuard(
-      { verifyToken } as unknown as SessionTokenService,
-      { adminPassword: "admin", secretKey },
-    );
+    return new AdminGuard({ verifyToken } as unknown as SessionTokenService, {
+      adminPassword: "admin",
+      secretKey,
+    });
   }
 
   beforeEach(() => {
