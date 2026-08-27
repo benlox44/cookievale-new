@@ -6,6 +6,7 @@ import { AppController } from "./app.controller";
 import { AuthModule } from "./modules/auth/auth.module";
 import { DrizzleModule } from "./shared/drizzle/drizzle.module";
 import { DomainExceptionFilter } from "./shared/http/domain-exception.filter";
+import { TelegramModule } from "./shared/telegram/telegram.module";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { DomainExceptionFilter } from "./shared/http/domain-exception.filter";
       errorMessage: "Rate limit exceeded",
     }),
     DrizzleModule,
+    TelegramModule,
     AuthModule,
   ],
   controllers: [AppController],
