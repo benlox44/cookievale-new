@@ -15,3 +15,9 @@ coverage/
 
 # Logs
 *.log
+
+# One-time legacy cutover script
+cutover*.sql
+
+# Local symlink to AGENTS.md (see README)
+CLAUDE.md
