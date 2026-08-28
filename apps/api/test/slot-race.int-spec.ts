@@ -37,7 +37,7 @@ describe("slot race (integration)", () => {
         .field("description", "d");
 
     const [a, b] = await Promise.all([place(), place()]);
-    // One wins the unique index; the other loses (409), whichever order they land.
+    /** One wins the unique index; the other loses (409), whichever order they land. */
     expect([a.status, b.status].sort()).toEqual([201, 409]);
   });
 });

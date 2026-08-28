@@ -13,9 +13,10 @@ export function configureApp(
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useStaticAssets(config.containerMediaPath, { prefix: "/media" });
 
-  // Serve the built SPA (index.html at /, plus its assets). __dirname resolves
-  // to /app/apps/web/dist in dev and prod. The client-route fallback lands with
-  // the real frontend; the stub has no routes to fall back for.
+  /**
+   * __dirname resolves to /app/apps/web/dist in dev and prod. The client-route
+   * fallback lands with the real frontend; the stub has no routes to fall back for.
+   */
   app.useStaticAssets(join(__dirname, "../../web/dist"));
 
   if (config.trustedProxyHosts.length > 0) {

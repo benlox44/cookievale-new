@@ -4,18 +4,18 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createTestApp } from "./app";
 
-// One representative route per controller — a guard that every controller is
-// wired into the OpenAPI doc that `/docs` serves.
+/** One representative route per controller — a guard that every controller is
+ * wired into the OpenAPI doc that `/docs` serves. */
 const EXPECTED_PATHS = [
-  "/health", // AppController
-  "/auth/login", // AuthController
-  "/available-dates", // DatesController
-  "/admin/dates", // AdminDatesController
-  "/products", // ProductsController
-  "/admin/products", // AdminProductsController
-  "/orders", // OrdersController
-  "/admin/orders", // AdminOrdersController
-  "/admin/orders/{id}/status", // AdminOrdersController (param route)
+  "/health",
+  "/auth/login",
+  "/available-dates",
+  "/admin/dates",
+  "/products",
+  "/admin/products",
+  "/orders",
+  "/admin/orders",
+  "/admin/orders/{id}/status",
 ];
 
 describe("swagger doc (integration)", () => {
