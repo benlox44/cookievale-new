@@ -4,6 +4,7 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 
 import { AppController } from "./app.controller";
 import { AuthModule } from "./modules/auth/auth.module";
+import { SchedulingModule } from "./modules/scheduling/scheduling.module";
 import { DrizzleModule } from "./shared/drizzle/drizzle.module";
 import { DomainExceptionFilter } from "./shared/http/domain-exception.filter";
 import { MediaModule } from "./shared/media/media.module";
@@ -25,6 +26,7 @@ import { TelegramModule } from "./shared/telegram/telegram.module";
     TelegramModule,
     MediaModule,
     AuthModule,
+    SchedulingModule,
   ],
   controllers: [AppController],
   providers: [

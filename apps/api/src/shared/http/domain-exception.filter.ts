@@ -18,6 +18,8 @@ const SERVER_ERROR_THRESHOLD = 500;
 /** Register every new domain exception code here to map it to an HTTP status. */
 const DOMAIN_STATUS_BY_CODE: Record<string, number> = {
   "AUTH.INVALID_CREDENTIALS": HttpStatus.UNAUTHORIZED,
+  "SCHEDULING.SLOT_UNAVAILABLE": HttpStatus.CONFLICT,
+  "SCHEDULING.PAST_DATE": HttpStatus.BAD_REQUEST,
 };
 
 function errorPhrase(status: number): string {
