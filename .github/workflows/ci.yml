@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load versions
+        run: cat versions.env >> "$GITHUB_ENV"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Build the shared package first — api/web import its compiled dist.
+      - run: pnpm --filter @cookievale/shared run build
+      - run: pnpm -r run lint-check
+      - run: pnpm -r run format-check
+      - run: pnpm -r run typecheck
+      - run: pnpm -r run test
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load versions
+        run: cat versions.env >> "$GITHUB_ENV"
+      # Started via docker run (not a service container) so the image tag can
+      # use $POSTGRES_VERSION from versions.env instead of a hardcoded version.
+      - name: Start Postgres
+        run: |
+          docker run -d --name postgres \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=cookievale \
+            -p 5432:5432 \
+            "postgres:${POSTGRES_VERSION}-alpine"
+      - name: Wait for Postgres
+        run: |
+          for _ in $(seq 1 30); do
+            docker exec postgres pg_isready -U postgres -d cookievale && exit 0
+            sleep 1
+          done
+          echo "Postgres did not become ready" >&2
+          exit 1
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @cookievale/shared run build
+      # global-setup connects here to create/migrate the <db>_test database;
+      # the workers then rebind to cookievale_test via applyTestEnv.
+      - name: Integration tests
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cookievale
+        run: pnpm --filter @cookievale/api run test:int
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load versions
+        run: cat versions.env >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v3
+      # Build the prod image to catch Dockerfile / build-stage breakage.
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          build-args: |
+            NODE_VERSION=${{ env.NODE_VERSION }}
+            PNPM_VERSION=${{ env.PNPM_VERSION }}
