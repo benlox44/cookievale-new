@@ -97,13 +97,15 @@ tests and self-documenting Swagger as it is built (see AGENTS.md conventions):
       via `updatePhotoSet`), `display_order`/reorder, delete guard when orders
       exist; public `GET /products` (active only). Images behind a `PRODUCT_IMAGE_STORE`
       port; multipart uploads adapted to `UploadedImage` (no `@types/multer`)
-- [ ] **orders**: customer create (cart + slot + photos + Telegram + rate limit
+- [x] **orders**: customer create (cart + slot + photos + Telegram + rate limit
       `5/hour`) and admin create, list (page 50, include delivered, sort by id/date),
       detail, update (slot re-match for date, past dates → null slot), change status
       (auto-pays on paid/delivered), replace items (price snapshot), delete (frees
-      the slot + removes media dir), **no rejected status**
-- [ ] Cart parsing shared (port of `cart.py` `parse_cart_items`, Spanish
-      `CartError` messages, `stored_prices` for edits)
+      the slot + removes media dir), **no rejected status**. Slot race caught as a
+      `23505` unique-violation → 409; Telegram message is English (per AGENTS.md)
+- [x] Cart parsing (port of `cart.py` `parse_cart_items`): merge duplicates, drop
+      qty≤0, resolve prices server-side (live or `stored_prices` snapshot on edit);
+      `CartException` messages in English (SPA localizes)
 
 ## Phase 5 — Backend delivery (integration tests, SPA serve, CI)
 
