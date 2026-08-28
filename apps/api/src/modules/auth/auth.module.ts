@@ -28,6 +28,8 @@ import { HmacSessionTokenService } from "./infrastructure/services/session-token
     AdminLoginUseCase,
     AdminGuard,
   ],
-  exports: [AdminGuard],
+  // Export the guard's ports too so other modules can apply AdminGuard
+  // (a controller-level guard resolves in the consuming module's context).
+  exports: [AdminGuard, SESSION_TOKEN_SERVICE, AUTH_CONFIG],
 })
 export class AuthModule {}
