@@ -20,6 +20,8 @@ const DOMAIN_STATUS_BY_CODE: Record<string, number> = {
   "AUTH.INVALID_CREDENTIALS": HttpStatus.UNAUTHORIZED,
   "SCHEDULING.SLOT_UNAVAILABLE": HttpStatus.CONFLICT,
   "SCHEDULING.PAST_DATE": HttpStatus.BAD_REQUEST,
+  "PRODUCTS.NOT_FOUND": HttpStatus.NOT_FOUND,
+  "PRODUCTS.IN_USE": HttpStatus.CONFLICT,
 };
 
 function errorPhrase(status: number): string {
