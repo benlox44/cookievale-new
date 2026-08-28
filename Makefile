@@ -1,4 +1,4 @@
-.PHONY: help build up down restart logs generate migrate backup test lint lint-check format format-check typecheck
+.PHONY: help build up down restart logs generate migrate backup test test-int lint lint-check format format-check typecheck
 
 .DEFAULT_GOAL := help
 
@@ -52,6 +52,10 @@ backup:
 ## test: Run tests across the monorepo
 test:
 	$(DC) exec $(APP) pnpm -r run test
+
+## test-int: Run API integration tests (real Postgres, in a <db>_test database)
+test-int:
+	$(DC) exec $(APP) pnpm --filter @cookievale/api run test:int
 
 ## lint: Lint across the monorepo (auto-fix)
 lint:
