@@ -22,6 +22,9 @@ const DOMAIN_STATUS_BY_CODE: Record<string, number> = {
   "SCHEDULING.PAST_DATE": HttpStatus.BAD_REQUEST,
   "PRODUCTS.NOT_FOUND": HttpStatus.NOT_FOUND,
   "PRODUCTS.IN_USE": HttpStatus.CONFLICT,
+  "ORDERS.NOT_FOUND": HttpStatus.NOT_FOUND,
+  "ORDERS.SLOT_UNAVAILABLE": HttpStatus.CONFLICT,
+  "ORDERS.CART_INVALID": HttpStatus.BAD_REQUEST,
 };
 
 function errorPhrase(status: number): string {

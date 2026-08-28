@@ -4,6 +4,7 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 
 import { AppController } from "./app.controller";
 import { AuthModule } from "./modules/auth/auth.module";
+import { OrdersModule } from "./modules/orders/orders.module";
 import { ProductsModule } from "./modules/products/products.module";
 import { SchedulingModule } from "./modules/scheduling/scheduling.module";
 import { DrizzleModule } from "./shared/drizzle/drizzle.module";
@@ -29,6 +30,7 @@ import { TelegramModule } from "./shared/telegram/telegram.module";
     AuthModule,
     SchedulingModule,
     ProductsModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [
