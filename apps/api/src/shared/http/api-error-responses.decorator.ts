@@ -2,6 +2,7 @@ import { applyDecorators } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
+  ApiNotFoundResponse,
   ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
@@ -16,6 +17,7 @@ interface ApiErrorScenario {
 interface ApiErrorScenarios {
   badRequest?: ApiErrorScenario | ApiErrorScenario[];
   unauthorized?: ApiErrorScenario | ApiErrorScenario[];
+  notFound?: ApiErrorScenario | ApiErrorScenario[];
   conflict?: ApiErrorScenario | ApiErrorScenario[];
   tooManyRequests?: ApiErrorScenario | ApiErrorScenario[];
 }
@@ -71,6 +73,16 @@ export function ApiErrorResponses(scenarios: ApiErrorScenarios) {
         type: ErrorResponseDto,
         description: "Not authenticated or invalid session",
         examples: toExamples(scenarios.unauthorized, 401, "Unauthorized"),
+      }),
+    );
+  }
+
+  if (scenarios.notFound !== undefined) {
+    decorators.push(
+      ApiNotFoundResponse({
+        type: ErrorResponseDto,
+        description: "Resource not found",
+        examples: toExamples(scenarios.notFound, 404, "Not Found"),
       }),
     );
   }
