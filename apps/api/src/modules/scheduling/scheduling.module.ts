@@ -29,6 +29,7 @@ import { ShopClock } from "./infrastructure/services/shop-clock";
     PurgePastSlotsUseCase,
   ],
   exports: [
+    CLOCK, // orders reuses "today" for its edit past-date rule
     AssignSlotUseCase,
     RemoveSlotUseCase,
     GetAvailableDatesUseCase,
