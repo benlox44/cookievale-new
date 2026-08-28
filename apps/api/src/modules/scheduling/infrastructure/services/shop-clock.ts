@@ -4,7 +4,7 @@ export class ShopClock implements Clock {
   constructor(private readonly timeZone: string) {}
 
   today(): string {
-    // en-CA renders YYYY-MM-DD; the timeZone pins it to the shop's day boundary.
+    /** en-CA renders YYYY-MM-DD; the timeZone pins it to the shop's day boundary. */
     return new Intl.DateTimeFormat("en-CA", {
       timeZone: this.timeZone,
       year: "numeric",

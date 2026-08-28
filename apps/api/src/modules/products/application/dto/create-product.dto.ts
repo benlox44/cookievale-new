@@ -10,7 +10,7 @@ import {
   Min,
 } from "class-validator";
 
-// Multipart form fields arrive as strings, so numeric/boolean fields are coerced.
+/** Multipart form fields arrive as strings, so numeric/boolean fields are coerced. */
 export class CreateProductDto {
   @IsString()
   @Length(1, 100)

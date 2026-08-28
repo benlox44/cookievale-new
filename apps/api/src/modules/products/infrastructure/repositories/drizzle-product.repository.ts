@@ -17,7 +17,7 @@ export class DrizzleProductRepository implements ProductRepository {
     return this.drizzle.db;
   }
 
-  // Projection that maps a row to the Product entity (drops timestamps).
+  /** Projection that maps a row to the Product entity (drops timestamps). */
   private readonly columns = {
     id: products.id,
     name: products.name,

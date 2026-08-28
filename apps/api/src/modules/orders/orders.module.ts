@@ -20,8 +20,10 @@ import { MediaOrderImageStore } from "./infrastructure/services/media-order-imag
 import { TelegramOrderNotifier } from "./infrastructure/services/telegram-order-notifier";
 
 @Module({
-  // Scheduling: AssignSlot/RemoveSlot + CLOCK; Products: GetProduct (cart);
-  // Auth: AdminGuard for the admin controller.
+  /**
+   * Scheduling: AssignSlot/RemoveSlot + CLOCK; Products: GetProduct (cart);
+   * Auth: AdminGuard for the admin controller.
+   */
   imports: [AuthModule, SchedulingModule, ProductsModule],
   controllers: [OrdersController, AdminOrdersController],
   providers: [

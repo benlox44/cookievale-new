@@ -19,7 +19,7 @@ function money(amount: number): string {
   return `$${amount.toLocaleString("en-US")}`;
 }
 
-// Local date parts (delivery_date is stored at local midnight, so UTC would drift).
+/** Local date parts (delivery_date is stored at local midnight, so UTC would drift). */
 function localDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");

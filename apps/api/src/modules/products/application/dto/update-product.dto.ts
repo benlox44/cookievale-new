@@ -18,13 +18,13 @@ function parseStringArray(value: unknown): string[] {
 }
 
 export class UpdateProductDto extends CreateProductDto {
-  // JSON array of the existing image URLs the form still keeps.
+  /** JSON array of the existing image URLs the form still keeps. */
   @Transform(({ value }) => parseStringArray(value))
   @IsArray()
   @IsString({ each: true })
   existingImages: string[] = [];
 
-  // JSON drag-and-drop order (existing URLs + `new:<index>` tokens); parsed downstream.
+  /** JSON drag-and-drop order (existing URLs + `new:<index>` tokens); parsed downstream. */
   @IsString()
   imageOrder = "[]";
 }

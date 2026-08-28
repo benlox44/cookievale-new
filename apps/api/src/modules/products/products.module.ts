@@ -16,7 +16,8 @@ import { DrizzleProductRepository } from "./infrastructure/repositories/drizzle-
 import { MediaProductImageStore } from "./infrastructure/services/media-product-image-store";
 
 @Module({
-  imports: [AuthModule], // provides AdminGuard for the admin controller
+  /** AuthModule provides AdminGuard for the admin controller. */
+  imports: [AuthModule],
   controllers: [ProductsController, AdminProductsController],
   providers: [
     { provide: PRODUCT_REPOSITORY, useClass: DrizzleProductRepository },

@@ -16,7 +16,7 @@ export class AddSlotUseCase {
   ) {}
 
   async execute(date: string): Promise<AvailabilitySlot> {
-    // `YYYY-MM-DD` strings compare chronologically.
+    /** `YYYY-MM-DD` strings compare chronologically. */
     if (date < this.clock.today()) {
       throw new PastDateException();
     }

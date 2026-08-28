@@ -15,7 +15,7 @@ import {
   type UpdateOrderData,
 } from "../../domain/repositories/order-repository";
 
-// Drizzle wraps the driver error, so the postgres "23505" code sits on `.cause`.
+/** Drizzle wraps the driver error, so the postgres "23505" code sits on `.cause`. */
 function isUniqueViolation(error: unknown): boolean {
   let current: unknown = error;
   while (typeof current === "object" && current !== null) {

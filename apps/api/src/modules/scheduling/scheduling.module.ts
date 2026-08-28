@@ -16,7 +16,8 @@ import { DrizzleSlotRepository } from "./infrastructure/repositories/drizzle-slo
 import { ShopClock } from "./infrastructure/services/shop-clock";
 
 @Module({
-  imports: [AuthModule], // provides AdminGuard for the admin controller
+  /** AuthModule provides AdminGuard for the admin controller. */
+  imports: [AuthModule],
   controllers: [DatesController, AdminDatesController],
   providers: [
     { provide: SLOT_REPOSITORY, useClass: DrizzleSlotRepository },
@@ -29,7 +30,8 @@ import { ShopClock } from "./infrastructure/services/shop-clock";
     PurgePastSlotsUseCase,
   ],
   exports: [
-    CLOCK, // orders reuses "today" for its edit past-date rule
+    /** orders reuses "today" for its edit past-date rule */
+    CLOCK,
     AssignSlotUseCase,
     RemoveSlotUseCase,
     GetAvailableDatesUseCase,
