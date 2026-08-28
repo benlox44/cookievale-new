@@ -1,6 +1,7 @@
 import { applyDecorators } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
+  ApiConflictResponse,
   ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
@@ -15,6 +16,7 @@ interface ApiErrorScenario {
 interface ApiErrorScenarios {
   badRequest?: ApiErrorScenario | ApiErrorScenario[];
   unauthorized?: ApiErrorScenario | ApiErrorScenario[];
+  conflict?: ApiErrorScenario | ApiErrorScenario[];
   tooManyRequests?: ApiErrorScenario | ApiErrorScenario[];
 }
 
@@ -69,6 +71,16 @@ export function ApiErrorResponses(scenarios: ApiErrorScenarios) {
         type: ErrorResponseDto,
         description: "Not authenticated or invalid session",
         examples: toExamples(scenarios.unauthorized, 401, "Unauthorized"),
+      }),
+    );
+  }
+
+  if (scenarios.conflict !== undefined) {
+    decorators.push(
+      ApiConflictResponse({
+        type: ErrorResponseDto,
+        description: "Conflict with the current state",
+        examples: toExamples(scenarios.conflict, 409, "Conflict"),
       }),
     );
   }
