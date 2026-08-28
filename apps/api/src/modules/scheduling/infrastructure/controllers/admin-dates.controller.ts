@@ -15,10 +15,10 @@ import {
 } from "@nestjs/swagger";
 
 import { ApiErrorResponses } from "../../../../shared/http/api-error-responses.decorator";
+import { OperationOkDto } from "../../../../shared/http/operation-ok.dto";
 import { AdminGuard } from "../../../auth/infrastructure/guards/admin.guard";
 import { AddSlotDto } from "../../application/dto/add-slot.dto";
 import { DateParamDto } from "../../application/dto/date-param.dto";
-import { OperationOkDto } from "../../application/dto/operation-ok.dto";
 import { SlotDto } from "../../application/dto/slot.dto";
 import { AddSlotUseCase } from "../../application/use-cases/add-slot.use-case";
 import { RemoveFreeSlotUseCase } from "../../application/use-cases/remove-free-slot.use-case";
