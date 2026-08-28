@@ -93,8 +93,10 @@ tests and self-documenting Swagger as it is built (see AGENTS.md conventions):
       free slot (with `current_slot_id` for edits), admin add/remove slot; public
       available-dates endpoint. Occupancy via SQL `NOT EXISTS`; reads filter
       `date >= today` (purge is a cron-ready use-case, not write-on-read)
-- [ ] **products**: admin CRUD, active/inactive, multiple images (order + delete),
-      `display_order`/reorder, delete guard when orders exist
+- [x] **products**: admin CRUD, active/inactive, multiple images (order + delete
+      via `updatePhotoSet`), `display_order`/reorder, delete guard when orders
+      exist; public `GET /products` (active only). Images behind a `PRODUCT_IMAGE_STORE`
+      port; multipart uploads adapted to `UploadedImage` (no `@types/multer`)
 - [ ] **orders**: customer create (cart + slot + photos + Telegram + rate limit
       `5/hour`) and admin create, list (page 50, include delivered, sort by id/date),
       detail, update (slot re-match for date, past dates → null slot), change status
