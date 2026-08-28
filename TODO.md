@@ -109,17 +109,17 @@ tests and self-documenting Swagger as it is built (see AGENTS.md conventions):
 
 ## Phase 5 — Backend delivery (integration tests, SPA serve, CI)
 
-- [ ] Integration tests against real postgres (dedicated `<db>_test` database,
+- [x] Integration tests against real postgres (dedicated `<db>_test` database,
       throwaway media dir, drizzle migrate, fake Telegram): admin/auth/client API +
       repositories (slot race / unique index)
-- [ ] NestJS serves the built SPA (`apps/web/dist`) with SPA fallback +
-      `/robots.txt` + `/sitemap.xml` (parity)
-- [ ] Swagger audit: verify `/docs` reflects every real controller (already
+- [x] NestJS serves the built SPA (`apps/web/dist`) + `/robots.txt` +
+      `/sitemap.xml` (parity). Client-route fallback lands with the real SPA.
+- [x] Swagger audit: verify `/docs` reflects every real controller (already
       self-documented per module; Phase 5 only audits completeness)
-- [ ] CI (GitHub Actions): lint, format-check, typecheck, test,
+- [x] CI (GitHub Actions): lint, format-check, typecheck, test,
       docker-build
 - [ ] Deploy: `drizzle migrate` on boot/deploy (replaces alembic), adapted
-      PowerShell deploy
+      PowerShell deploy (deferred: needs the Windows/Tailscale/VPS host)
 
 ## Deferred — Frontend (out of scope until backend parity)
 
