@@ -89,9 +89,10 @@ checklist is complete.
 Each module with the EXAMOC structure (Application/Domain/Infrastructure) + unit
 tests and self-documenting Swagger as it is built (see AGENTS.md conventions):
 
-- [ ] **scheduling**: slots by date, available dates with free counts, purge past
-      slots, assign a free slot (with `current_slot_id` for edits), admin add/remove
-      slot; public available-dates endpoint
+- [x] **scheduling**: available dates with free counts, purge past slots, assign a
+      free slot (with `current_slot_id` for edits), admin add/remove slot; public
+      available-dates endpoint. Occupancy via SQL `NOT EXISTS`; reads filter
+      `date >= today` (purge is a cron-ready use-case, not write-on-read)
 - [ ] **products**: admin CRUD, active/inactive, multiple images (order + delete),
       `display_order`/reorder, delete guard when orders exist
 - [ ] **orders**: customer create (cart + slot + photos + Telegram + rate limit
